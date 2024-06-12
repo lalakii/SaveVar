@@ -1,0 +1,33 @@
+apply plugin: 'com.android.library'
+apply from: "../publish.gradle"
+apply plugin: 'org.jetbrains.kotlin.android'
+android {
+    namespace "cn.lalaki.save.vars"
+    compileSdk compile_sdk_version
+    defaultConfig {
+        minSdkVersion min_sdk_version
+        targetSdkVersion target_sdk_version
+    }
+    compileOptions {
+        targetCompatibility java_version
+        sourceCompatibility java_version
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            isDefault true
+        }
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+}
+ext {
+    artifactId = "SaveVar"
+    projectUrl = "http://github.com/lalakii/SaveVar"
+    projectLicense = "GNU General Public License, version 2"
+    projectLicenseUrl = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.zh-cn.html"
+}
