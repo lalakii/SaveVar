@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SaveVar Demo</string>
+    <string name="msg">输入的文字会保存到配置文件，即使app重启仍然存在</string>
+    <string name="btn_kill">强行停止此程序</string>
+</resources>

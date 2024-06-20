@@ -1,0 +1,35 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+android {
+    namespace 'cn.lalaki.demo19999'
+    compileSdk 34
+    defaultConfig {
+        versionCode = 2
+        versionName "1.4"
+        applicationId 'cn.lalaki.demo19999'
+        minSdk 26
+    }
+    buildTypes {
+        release {
+            isDefault true
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions{
+        jvmTarget = "21"
+    }
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation project(":save_var")
+}
+tasks.configureEach {
+    if (it.name.toLowerCase().contains("aarmetadata")) it.enabled = false
+}
