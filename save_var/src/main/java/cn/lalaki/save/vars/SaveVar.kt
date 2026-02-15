@@ -1,11 +1,14 @@
 package cn.lalaki.save.vars
 
+import android.content.Context
+import android.os.Handler
 import android.util.Base64
-import android.util.Log
+import androidx.core.util.Consumer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Properties
+import java.util.concurrent.Executors
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -19,15 +22,11 @@ import kotlin.io.path.outputStream
 @Suppress("MemberVisibilityCanBePrivate")
 open class SaveVar : Properties() {
     companion object {
-        @Synchronized
-        fun init(config: Path?, vararg secretKeyArray: ByteArray) {
+        fun init(context: Context, config: Path?, vararg secretKeyArray: ByteArray) {
+            mHandler = Handler(context.mainLooper)
             sCONFIG = config
             val mConfig = sCONFIG
             if (mConfig != null) {
-                val ivData = ByteArray(12)
-                SecureRandom().nextBytes(ivData)
-                val iv = GCMParameterSpec(128, ivData)
-                mIV = iv
                 val cipher = Cipher.getInstance("AES/GCM/NoPadding")
                 mCipher = cipher
                 val alg = cipher.algorithm.take(3)
@@ -40,7 +39,6 @@ open class SaveVar : Properties() {
                     var keyData: ByteArray? = null
                     try {
                         keyData = Files.readAllBytes(localKey)
-                        Log.d("CCCCC",Base64.encodeToString(keyData, Base64.DEFAULT))
                     } catch (_: Throwable) {
                     }
                     if (keyData != null) {
@@ -65,28 +63,62 @@ open class SaveVar : Properties() {
             }
         }
 
-        var sCONFIG: Path? = null
-        var mCipher: Cipher? = null
-        var mIV: GCMParameterSpec? = null
-        var mSecretKey: SecretKey? = null
         val INSTANCE by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { SaveVar() }
+        private var sCONFIG: Path? = null
+        private var mCipher: Cipher? = null
+        private var mSecretKey: SecretKey? = null
+        private val sThreadPool = Executors.newSingleThreadExecutor()
+        private var mHandler: Handler? = null
+        private val mSecureRandom = SecureRandom()
+        private const val IV_SIZE = 12
+        private const val T_LEN = 128
     }
 
-    @Synchronized
+    fun getAsync(name: String?, callback: Consumer<String>) {
+        sThreadPool.submit {
+            val ret = get(name)
+            mHandler?.post {
+                callback.accept(ret)
+            }
+        }
+    }
+
+    fun getListAsync(name: String?, separator: String, callback: Consumer<List<String>?>) {
+        sThreadPool.submit {
+            val ret = get(name, separator)
+            mHandler?.post {
+                callback.accept(ret)
+            }
+        }
+    }
+
+    fun setAsync(name: String, value: String?) {
+        sThreadPool.submit {
+            set(name, value)
+        }
+    }
+
+    fun setListAsync(name: String, value: List<String>?, separator: String) {
+        sThreadPool.submit {
+            set(name, value, separator)
+        }
+    }
+
     fun get(name: String?): String {
         var value = ""
-        if (!name.isNullOrEmpty()) {
+        if (!name.isNullOrEmpty() && this.containsKey(name)) {
             value = getProperty(name, "")
             if (value.isNotEmpty()) {
-                var decodeData = Base64.decode(value, Base64.NO_PADDING or Base64.NO_WRAP)
+                var decodeData = Base64.decode(value, Base64.NO_WRAP or Base64.NO_PADDING)
                 val cipher = mCipher
                 val key = mSecretKey
-                val iv = mIV
-                if (cipher != null && key != null && iv != null) {
-                    val ivSize = iv.iv.size
-                    val myIv = decodeData.copyOfRange(decodeData.size - ivSize, decodeData.size)
-                    cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(iv.tLen, myIv))
-                    decodeData = cipher.doFinal(decodeData.dropLast(ivSize).toByteArray())
+                if (cipher != null && key != null) {
+                    val myIv = decodeData.copyOfRange(decodeData.size - IV_SIZE, decodeData.size)
+                    try {
+                        cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(T_LEN, myIv))
+                        decodeData = cipher.doFinal(decodeData.dropLast(IV_SIZE).toByteArray())
+                    } catch (_: Throwable) {
+                    }
                 }
                 value = decodeData.decodeToString()
             }
@@ -94,7 +126,6 @@ open class SaveVar : Properties() {
         return value
     }
 
-    @Synchronized
     fun set(
         name: String,
         value: String?,
@@ -103,15 +134,19 @@ open class SaveVar : Properties() {
             if (!value.isNullOrEmpty()) {
                 val cipher = mCipher
                 val key = mSecretKey
-                val iv = mIV
+                val ivData = ByteArray(IV_SIZE)
+                mSecureRandom.nextBytes(ivData)
+                val iv = GCMParameterSpec(T_LEN, ivData)
                 var data = value.encodeToByteArray()
-                if (cipher != null && key != null && iv != null) {
-                    cipher.init(Cipher.ENCRYPT_MODE, key, iv)
-                    data = cipher.doFinal(data)
-                    data += iv.iv
+                if (cipher != null && key != null) {
+                    try {
+                        cipher.init(Cipher.ENCRYPT_MODE, key, iv)
+                        data = cipher.doFinal(data) + iv.iv
+                    } catch (_: Throwable) {
+                    }
                 }
                 setProperty(
-                    name, Base64.encodeToString(data, Base64.NO_PADDING or Base64.NO_WRAP)
+                    name, Base64.encodeToString(data, Base64.NO_WRAP or Base64.NO_PADDING)
                 )
             } else {
                 unset(name)
@@ -122,7 +157,6 @@ open class SaveVar : Properties() {
         }
     }
 
-    @Synchronized
     fun set(
         name: String,
         value: List<String>?,
@@ -135,7 +169,6 @@ open class SaveVar : Properties() {
         }
     }
 
-    @Synchronized
     fun get(
         name: String?,
         separator: String,
@@ -148,6 +181,6 @@ open class SaveVar : Properties() {
     }
 
     private fun unset(name: String) {
-        this.setProperty(name, "")
+        this.remove(name)
     }
 }

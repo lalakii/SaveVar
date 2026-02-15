@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), TextWatcher {
         val editText = findViewById<AppCompatEditText>(R.id.editText)
         val configPath = Paths.get(filesDir.canonicalPath, "config.ini")
         try {
-            SaveVar.init(configPath)
+            SaveVar.init(this,configPath)
             editText.append(SaveVar.INSTANCE.get("save"))
         } catch (_: Throwable) {
         }
@@ -73,6 +73,9 @@ class MainActivity : AppCompatActivity(), TextWatcher {
         // SaveVar.INSTANCE.set("key", listOf("args0", "args1", "args2"), "&")
         // SaveVar.INSTANCE.get("key")
         // SaveVar.INSTANCE.get("key", "&")
+        SaveVar.INSTANCE.getAsync("save") { v ->
+            Toast.makeText(this, v, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun beforeTextChanged(
