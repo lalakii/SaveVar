@@ -4,5 +4,5 @@ ext {
     target_sdk_version = 36
     compile_sdk_version = 36
     min_sdk_version = 26
-    release_version = "3.0.0"
+    release_version = "3.0.1"
 }

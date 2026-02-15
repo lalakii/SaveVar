@@ -1,6 +1,7 @@
 package cn.lalaki.save.vars
 
 import android.util.Base64
+import android.util.Log
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
@@ -20,35 +21,34 @@ open class SaveVar : Properties() {
     companion object {
         @Synchronized
         fun init(config: Path?, vararg secretKeyArray: ByteArray) {
-            if (config != null) {
-                sCONFIG = config
-            }
+            sCONFIG = config
             val mConfig = sCONFIG
-            if (mConfig != null && mConfig.isRegularFile()) {
+            if (mConfig != null) {
                 val ivData = ByteArray(12)
                 SecureRandom().nextBytes(ivData)
-                val iv = GCMParameterSpec(96, ivData)
+                val iv = GCMParameterSpec(128, ivData)
                 mIV = iv
                 val cipher = Cipher.getInstance("AES/GCM/NoPadding")
                 mCipher = cipher
+                val alg = cipher.algorithm.take(3)
                 var key: SecretKey? = null
                 if (secretKeyArray.isNotEmpty()) {
-                    key = SecretKeySpec(secretKeyArray[0], cipher.algorithm)
+                    key = SecretKeySpec(secretKeyArray[0], alg)
                 }
                 val localKey = Path.of(mConfig.parent.absolutePathString(), ".secret.key")
                 if (key == null && localKey.isRegularFile()) {
                     var keyData: ByteArray? = null
                     try {
                         keyData = Files.readAllBytes(localKey)
+                        Log.d("CCCCC",Base64.encodeToString(keyData, Base64.DEFAULT))
                     } catch (_: Throwable) {
-
                     }
                     if (keyData != null) {
-                        key = SecretKeySpec(keyData, cipher.algorithm)
+                        key = SecretKeySpec(keyData, alg)
                     }
                 }
                 if (key == null) {
-                    val keyGen = KeyGenerator.getInstance(cipher.algorithm)
+                    val keyGen = KeyGenerator.getInstance(alg)
                     keyGen.init(256)
                     key = keyGen.generateKey()
                     try {
@@ -57,8 +57,10 @@ open class SaveVar : Properties() {
                     }
                 }
                 mSecretKey = key
-                mConfig.inputStream().use {
-                    INSTANCE.load(it)
+                if (mConfig.isRegularFile()) {
+                    mConfig.inputStream().use {
+                        INSTANCE.load(it)
+                    }
                 }
             }
         }

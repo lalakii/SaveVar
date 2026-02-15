@@ -16,6 +16,7 @@ import cn.lalaki.save.vars.SaveVar
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.createFile
 import kotlin.io.path.isRegularFile
 import kotlin.system.exitProcess
 
@@ -36,8 +37,7 @@ class MainActivity : AppCompatActivity(), TextWatcher {
         val editText = findViewById<AppCompatEditText>(R.id.editText)
         val configPath = Paths.get(filesDir.canonicalPath, "config.ini")
         try {
-            SaveVar.init(configPath, Base64.decode("3pCTBQDsTgsHKetQmcFep+MAJo+27JpV9psxBAsdJro=",
-                Base64.DEFAULT))
+            SaveVar.init(configPath)
             editText.append(SaveVar.INSTANCE.get("save"))
         } catch (_: Throwable) {
         }
