@@ -1,14 +1,10 @@
 package cn.lalaki.save.vars
 
-import android.content.Context
-import android.os.Handler
 import android.util.Base64
-import androidx.core.util.Consumer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Properties
-import java.util.concurrent.Executors
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -22,8 +18,7 @@ import kotlin.io.path.outputStream
 @Suppress("MemberVisibilityCanBePrivate")
 open class SaveVar : Properties() {
     companion object {
-        fun init(context: Context, config: Path?, vararg secretKeyArray: ByteArray) {
-            mHandler = Handler(context.mainLooper)
+        fun init(config: Path?, vararg secretKeyArray: ByteArray) {
             sCONFIG = config
             val mConfig = sCONFIG
             if (mConfig != null) {
@@ -67,41 +62,9 @@ open class SaveVar : Properties() {
         private var sCONFIG: Path? = null
         private var mCipher: Cipher? = null
         private var mSecretKey: SecretKey? = null
-        private val sThreadPool = Executors.newSingleThreadExecutor()
-        private var mHandler: Handler? = null
         private val mSecureRandom = SecureRandom()
         private const val IV_SIZE = 12
         private const val T_LEN = 128
-    }
-
-    fun getAsync(name: String?, callback: Consumer<String>) {
-        sThreadPool.submit {
-            val ret = get(name)
-            mHandler?.post {
-                callback.accept(ret)
-            }
-        }
-    }
-
-    fun getListAsync(name: String?, separator: String, callback: Consumer<List<String>?>) {
-        sThreadPool.submit {
-            val ret = get(name, separator)
-            mHandler?.post {
-                callback.accept(ret)
-            }
-        }
-    }
-
-    fun setAsync(name: String, value: String?) {
-        sThreadPool.submit {
-            set(name, value)
-        }
-    }
-
-    fun setListAsync(name: String, value: List<String>?, separator: String) {
-        sThreadPool.submit {
-            set(name, value, separator)
-        }
     }
 
     fun get(name: String?): String {

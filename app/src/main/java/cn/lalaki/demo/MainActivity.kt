@@ -3,7 +3,6 @@ package cn.lalaki.demo
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Base64
 import android.widget.Button
 import android.widget.ScrollView
 import android.widget.TextView
@@ -13,10 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import cn.lalaki.demo19999.R
 import cn.lalaki.save.vars.SaveVar
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.io.path.createFile
 import kotlin.io.path.isRegularFile
 import kotlin.system.exitProcess
 
@@ -37,7 +34,7 @@ class MainActivity : AppCompatActivity(), TextWatcher {
         val editText = findViewById<AppCompatEditText>(R.id.editText)
         val configPath = Paths.get(filesDir.canonicalPath, "config.ini")
         try {
-            SaveVar.init(this,configPath)
+            SaveVar.init(configPath)
             editText.append(SaveVar.INSTANCE.get("save"))
         } catch (_: Throwable) {
         }
@@ -73,9 +70,6 @@ class MainActivity : AppCompatActivity(), TextWatcher {
         // SaveVar.INSTANCE.set("key", listOf("args0", "args1", "args2"), "&")
         // SaveVar.INSTANCE.get("key")
         // SaveVar.INSTANCE.get("key", "&")
-        SaveVar.INSTANCE.getAsync("save") { v ->
-            Toast.makeText(this, v, Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun beforeTextChanged(
