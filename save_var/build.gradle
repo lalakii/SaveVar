@@ -1,9 +1,14 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 apply plugin: 'com.android.library'
 apply from: "../publish.gradle"
 apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'cn.lalaki.central'
 android {
     namespace "cn.lalaki.save.vars"
-    compileSdk compile_sdk_version
+    compileSdk = compile_sdk_version
     defaultConfig {
         minSdkVersion min_sdk_version
         targetSdkVersion target_sdk_version
@@ -18,12 +23,65 @@ android {
             isDefault true
         }
     }
-    kotlinOptions {
-        jvmTarget = '17'
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+            freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+        }
     }
 }
 dependencies {
-    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.core:core-ktx:1.17.0'
+}
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                url = "D:\\repo\\"
+            }
+        }
+        publications {
+            release(MavenPublication) {
+                artifact(tasks.named("bundleReleaseAar"))
+                def finalUrl = "https://github.com/lalakii/SaveVar"
+                pom {
+                    name = artifactId
+                    artifactId = artifactId
+                    groupId = "cn.lalaki"
+                    version = release_version
+                    description = "Saving variables to a configuration file, simple utility class implementation."
+                    url = finalUrl
+                    licenses {
+                        license {
+                            name = projectLicense
+                            url = projectLicenseUrl
+                        }
+                    }
+                    developers {
+                        developer {
+                            name = 'lalakii'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:' + finalUrl + '.git'
+                        url = finalUrl
+                    }
+                    organization {
+                        name = "lalaki.cn"
+                        url = finalUrl
+                    }
+                }
+            }
+        }
+    }
+    signing {
+        useGpgCmd()
+        sign publishing.publications.release
+    }
+}
+centralPortalPlus {
+    tokenXml = uri("D:\\BIN\\token.txt")
+    url = uri("D:\\repo\\")
 }
 ext {
     artifactId = "SaveVar"

@@ -24,9 +24,24 @@
         android:text="@string/msg" />
 
     <Button
+        android:id="@+id/view_config"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="end"
+        android:layout_marginTop="50dp"
+        android:text="@string/view_config" />
+    <Button
+        android:id="@+id/btn_rm_config"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="50dp"
+        android:text="@string/btn_rm_config" />
+    <Button
         android:id="@+id/btn_kill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="50dp"
         android:text="@string/btn_kill" />
 </LinearLayout>
