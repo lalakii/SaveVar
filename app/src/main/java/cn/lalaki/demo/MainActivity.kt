@@ -1,15 +1,16 @@
 package cn.lalaki.demo
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ScrollView
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.view.size
 import cn.lalaki.demo19999.R
 import cn.lalaki.save.vars.SaveVar
 import java.nio.file.Files
@@ -24,30 +25,59 @@ import kotlin.system.exitProcess
  * @since 测试类
  * 保存变量测试
  */
-class MainActivity : AppCompatActivity(), TextWatcher {
-    private lateinit var textView: TextView
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main)
-        textView = findViewById(R.id.textView)
-        val editText = findViewById<AppCompatEditText>(R.id.editText)
+        val spinnerView = findViewById<Spinner>(R.id.variable_list)
+        val editText = findViewById<EditText>(R.id.edit_key_text)
+        val editValueText = findViewById<EditText>(R.id.edit_value_text)
         val configPath = Paths.get(filesDir.canonicalPath, "config.ini")
         try {
             SaveVar.init(configPath)
-            editText.append(SaveVar.INSTANCE.get("save"))
         } catch (_: Throwable) {
         }
-        editText.addTextChangedListener(this)
         findViewById<Button>(R.id.btn_kill).setOnClickListener {
             finish()
             exitProcess(0)
+        }
+        val list = mutableListOf<String>()
+        val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, list)
+        spinnerView.adapter = arrayAdapter
+        for (key in SaveVar.INSTANCE.keys().iterator()) {
+            arrayAdapter.add("${key}=${SaveVar.INSTANCE.get(key.toString())}")
         }
         findViewById<Button>(R.id.btn_rm_config).setOnClickListener {
             if (configPath.isRegularFile()) {
                 Files.delete(configPath)
                 Toast.makeText(this@MainActivity, R.string.delete, Toast.LENGTH_SHORT).show()
-                finish()
+                arrayAdapter.clear()
+                arrayAdapter.notifyDataSetChanged()
+            }
+        }
+        arrayAdapter.notifyDataSetChanged()
+        findViewById<Button>(R.id.btn_add).setOnClickListener {
+            SaveVar.INSTANCE.set("${editText.text}", "${editValueText.text}")
+            var removed = false
+            var item1: String? = null
+            for (i in 0 until arrayAdapter.count) {
+                val item = arrayAdapter.getItem(i)
+                if (item?.startsWith("${editText.text}=") == true) {
+                    removed = true
+                    item1 = item
+                    break
+                }
+            }
+            if (removed) {
+                arrayAdapter.remove(item1)
+            }
+            arrayAdapter.add("${editText.text}=${editValueText.text}")
+            arrayAdapter.notifyDataSetChanged()
+            try {
+                val size = arrayAdapter.count
+                spinnerView.setSelection(size - 1)
+            } catch (_: Throwable) {
             }
         }
         findViewById<Button>(R.id.view_config).setOnClickListener {
@@ -66,29 +96,5 @@ class MainActivity : AppCompatActivity(), TextWatcher {
                 }
             }
         }
-        //  SaveVar.INSTANCE.set("key", "value")
-        // SaveVar.INSTANCE.set("key", listOf("args0", "args1", "args2"), "&")
-        // SaveVar.INSTANCE.get("key")
-        // SaveVar.INSTANCE.get("key", "&")
-    }
-
-    override fun beforeTextChanged(
-        s: CharSequence?,
-        start: Int,
-        count: Int,
-        after: Int,
-    ) {
-    }
-
-    override fun onTextChanged(
-        s: CharSequence?,
-        start: Int,
-        before: Int,
-        count: Int,
-    ) {
-    }
-
-    override fun afterTextChanged(s: Editable?) {
-        SaveVar.INSTANCE.set("save", "${s?.toString()}")
     }
 }

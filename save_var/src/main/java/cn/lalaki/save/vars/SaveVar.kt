@@ -1,6 +1,7 @@
 package cn.lalaki.save.vars
 
 import android.util.Base64
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
@@ -29,7 +30,7 @@ open class SaveVar : Properties() {
                 if (secretKeyArray.isNotEmpty()) {
                     key = SecretKeySpec(secretKeyArray[0], alg)
                 }
-                val localKey = Path.of(mConfig.parent.absolutePathString(), ".secret.key")
+                val localKey = File(mConfig.parent.absolutePathString(), ".secret.key").toPath()
                 if (key == null && localKey.isRegularFile()) {
                     var keyData: ByteArray? = null
                     try {
@@ -65,6 +66,7 @@ open class SaveVar : Properties() {
         private val mSecureRandom = SecureRandom()
         private const val IV_SIZE = 12
         private const val T_LEN = 128
+        private const val BASE_FLAGS = Base64.NO_WRAP or Base64.NO_PADDING
     }
 
     fun get(name: String?): String {
@@ -72,7 +74,7 @@ open class SaveVar : Properties() {
         if (!name.isNullOrEmpty() && this.containsKey(name)) {
             value = getProperty(name, "")
             if (value.isNotEmpty()) {
-                var decodeData = Base64.decode(value, Base64.NO_WRAP or Base64.NO_PADDING)
+                var decodeData = Base64.decode(value, BASE_FLAGS)
                 val cipher = mCipher
                 val key = mSecretKey
                 if (cipher != null && key != null) {
@@ -109,7 +111,7 @@ open class SaveVar : Properties() {
                     }
                 }
                 setProperty(
-                    name, Base64.encodeToString(data, Base64.NO_WRAP or Base64.NO_PADDING)
+                    name, Base64.encodeToString(data, BASE_FLAGS)
                 )
             } else {
                 unset(name)
