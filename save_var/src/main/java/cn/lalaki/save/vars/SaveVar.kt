@@ -1,7 +1,6 @@
 package cn.lalaki.save.vars
 
 import android.util.Base64
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
@@ -11,7 +10,6 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.outputStream
@@ -30,7 +28,7 @@ open class SaveVar : Properties() {
                 if (secretKeyArray.isNotEmpty()) {
                     key = SecretKeySpec(secretKeyArray[0], alg)
                 }
-                val localKey = File(mConfig.parent.absolutePathString(), ".secret.key").toPath()
+                val localKey = mConfig.parent.resolve(".secret.key")
                 if (key == null && localKey.isRegularFile()) {
                     var keyData: ByteArray? = null
                     try {
