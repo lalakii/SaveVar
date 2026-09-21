@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SaveVar Demo</string>
+    <string name="msg">Saved to config, persists after restart</string>
+    <string name="btn_kill">Force stop app</string>
+    <string name="random_test">Random write test</string>
+    <string name="btn_rm_config">Delete config and clear variables</string>
+    <string name="delete">Variables cleared</string>
+    <string name="save">Saved variables:</string>
+    <string name="view_config">View config file</string>
+    <string name="regen_aes_key">Regenerate AES Key</string>
+    <string name="regen_aes_key_done">AES Key regenerated</string>
+    <string name="btn_add">Save variable</string>
+    <string name="eq">=</string>
+    <string name="props_load">Config loaded</string>
+    <string name="props_decrypt_failed">Load failed: KEY mismatch</string>
+</resources>

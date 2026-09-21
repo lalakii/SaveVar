@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SaveVar Demo</string>
+    <string name="msg">输入的文字会保存到配置文件，即使app重启仍然存在</string>
+    <string name="btn_kill">强行停止此程序</string>
+    <string name="random_test">随机写入测试</string>
+    <string name="btn_rm_config">删除当前配置文件并清空变量</string>
+    <string name="delete">变量列表已清空</string>
+    <string name="save">已保存的变量列表:</string>
+    <string name="view_config">查看配置文件</string>
+    <string name="regen_aes_key">重新生成 AES KEY</string>
+    <string name="regen_aes_key_done">AES KEY 已经重新生成</string>
+    <string name="btn_add">保存变量</string>
+    <string name="eq">=</string>
+    <string name="props_load">配置文件已载入</string>
+    <string name="props_decrypt_failed">文件加载失败, KEY不匹配</string>
+</resources>

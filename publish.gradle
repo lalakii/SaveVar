@@ -1,0 +1,8 @@
+ext {
+    groupId = "cn.lalaki"
+    java_version = JavaVersion.VERSION_17
+    target_sdk_version = 37
+    compile_sdk_version = 37
+    min_sdk_version = 26
+    release_version = "1.0-rc"
+}

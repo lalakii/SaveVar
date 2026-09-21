@@ -1,0 +1,38 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+}
+android {
+    namespace "cn.lalaki.demo.a10086"
+    compileSdk = 37
+    defaultConfig {
+        versionCode = 3
+        versionName "3.2"
+        applicationId "cn.lalaki.demo.a10086"
+        minSdk 26
+    }
+    buildTypes {
+        release {
+            isDefault true
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+            freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+        }
+    }
+}
+dependencies {
+    implementation "androidx.recyclerview:recyclerview:1.4.0"
+    implementation "androidx.appcompat:appcompat:1.8.0"
+    implementation project(":SaveVarEnhanced")
+}
