@@ -13,6 +13,8 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
@@ -34,7 +36,7 @@ sealed class SaveVarManager {
                 1,
                 0L,
                 TimeUnit.MILLISECONDS,
-                LinkedBlockingQueue(1.coerceAtLeast(Runtime.getRuntime().availableProcessors())),
+                LinkedBlockingQueue(2.coerceAtLeast(Runtime.getRuntime().availableProcessors())),
                 { runnable -> Thread(runnable, "SaveVar-IO-Executor") },
                 ThreadPoolExecutor.DiscardOldestPolicy()
             )
@@ -87,19 +89,6 @@ sealed class SaveVarManager {
             }
         }
 
-        @Suppress("unused")
-        fun addToOrderedStringSet(key: String, value: List<String>?, append: Boolean = true) {
-            if (value != null) {
-                if (!append) {
-                    set(key, null)
-                }
-                getOrderedStringSet(key).also {
-                    it.addAll(value)
-                    set(key, it.joinToString(separator = DELIMITER_CHAR.toString()))
-                }
-            }
-        }
-
         fun keys(): Set<Any> = SAVE_VAR.keys
 
         @Suppress("unused")
@@ -127,7 +116,7 @@ sealed class SaveVarManager {
 
     private class SaveVar : Properties() {
         private companion object {
-            private const val KEY_STORE_TIMESTAMP = "__cn.lalaki.save_var.timestamp"
+            // private const val KEY_STORE_TIMESTAMP = "__cn.lalaki.save_var.timestamp"
             private const val KEY_IV_LEN = 16
             private val SECURE_RANDOM by lazy { SecureRandom() }
         }
@@ -179,7 +168,7 @@ sealed class SaveVarManager {
 
         private fun loadDecrypted(configPath: Path, aesKey: ByteArray): Boolean {
             if (isWritableRegularFile(configPath)) {
-                BufferedInputStream(Files.newInputStream(configPath)).use { fis ->
+                BufferedInputStream(GZIPInputStream(Files.newInputStream(configPath))).use { fis ->
                     val iv = ByteArray(KEY_IV_LEN)
                     if (fis.read(iv) == KEY_IV_LEN) {
                         load(
@@ -197,7 +186,9 @@ sealed class SaveVarManager {
         private fun storeEncrypted() = requireVars()?.also { vars ->
             val cipher = getCipher(vars.second, Cipher.ENCRYPT_MODE, AtomicReference(null))
             val tmpPath = getTmpConfigPath(vars.first)
-            BufferedOutputStream(Files.newOutputStream(tmpPath)).also { bos ->
+            BufferedOutputStream(
+                GZIPOutputStream(Files.newOutputStream(tmpPath))
+            ).also { bos ->
                 bos.write(cipher.iv)
                 CipherOutputStream(bos, cipher).use { cos ->
                     store(cos, System.currentTimeMillis().toString())
@@ -240,7 +231,7 @@ sealed class SaveVarManager {
         override fun setProperty(key: String?, value: String?): Any? {
             val oldValue = super.getProperty(key)
             if (oldValue != value) {
-                super.setProperty(KEY_STORE_TIMESTAMP, System.currentTimeMillis().toString())
+                // super.setProperty(KEY_STORE_TIMESTAMP, System.currentTimeMillis().toString())
                 THREAD_POOL.execute {
                     try {
                         storeEncrypted()

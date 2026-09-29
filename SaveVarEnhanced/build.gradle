@@ -33,9 +33,7 @@ android {
 afterEvaluate {
     publishing {
         repositories {
-            maven {
-                url = "D:\\repo\\"
-            }
+            mavenLocal()
         }
         publications {
             release(MavenPublication) {
@@ -74,10 +72,6 @@ afterEvaluate {
                 }
             }
         }
-    }
-    signing {
-        useGpgCmd()
-        sign publishing.publications.release
     }
 }
 centralPortalPlus {
